@@ -1,6 +1,16 @@
 {
+  "name": "02-challenge",
+  "version": "1.0.0",
+  "description": "## Your Task",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "inquirer": "^9.2.3",
-    "mysql": "^2.18.1"
+    "inquirer": "^8.2.5",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.1.0"
   }
 }
