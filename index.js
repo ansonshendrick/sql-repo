@@ -1,5 +1,5 @@
 // Import necessary packages
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const inquirer = require('inquirer');
 
 // Create MySQL database connection
@@ -7,12 +7,12 @@ const connection = mysql.createConnection({
   host: 'localhost',
   port: 3306,
   user: 'root',
-  password: 'password',
-  database: 'company_db',
+  password: 'Strikers123',
+  // database: 'departments',
 });
 
 // Establish database connection
-connection.connect((err) => {
+connection.connect((err) => {   
   if (err) throw err;
   console.log('Connected to database!');
   start();
@@ -184,4 +184,121 @@ const addRole = () => {
         });
     });
   };
-  
+  // Function to add an employee
+const addEmployee = () => {
+    connection.query('SELECT id, title FROM role', (err, res) => {
+    if (err) throw err;
+    const roles = res.map(({ id, title }) => ({ name: title, value: id }));
+     connection.query(
+        `
+          SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS name FROM employee
+          LEFT JOIN employee manager ON employee.manager_id = manager.id
+          GROUP BY employee.id, name
+          ORDER BY employee.id ASC
+        `,
+        (err, res) => {
+          if (err) throw err;
+          const employees = res.map(({ id, name }) => ({ name: name, value: id }));
+          employees.push({ name: 'None', value: null });
+      
+          inquirer
+            .prompt([
+              {
+                name: 'first_name',
+                type: 'input',
+                message: "What is the employee's first name?",
+              },
+              {
+                name: 'last_name',
+                type: 'input',
+                message: "What is the employee's last name?",
+              },
+              {
+                name: 'role_id',
+                type: 'list',
+                message: "What is the employee's role?",
+                choices: roles,
+              },
+              {
+                name: 'manager_id',
+                type: 'list',
+                message: "Who is the employee's manager?",
+                choices: employees,
+              },
+            ])
+            .then((answer) => {
+              connection.query(
+                'INSERT INTO employee SET ?',
+                {
+                  first_name: answer.first_name,
+                  last_name: answer.last_name,
+                  role_id: answer.role_id,
+                  manager_id: answer.manager_id,
+                },
+                (err) => {
+                  if (err) throw err;
+                  console.log('New employee added successfully!');
+                  start();
+                }
+              );
+            });
+        }
+      );
+    });
+};
+
+// Function to update an employee's role
+const updateEmployeeRole = () => {
+connection.query(
+SELECT , employee.id, CONCAT(employee.first_name, ' ', employee.last_name) , AS , name, role.title ,
+FROM , employee , INNER , JOIN , role , 
+ON , employee.role_id = role.id , ORDER , BY , employee.id , ASC ,
+(err, res) => {
+if (err) throw err;
+const employees = res.map(({ id, name }) => ({ name: name, value: id }));   
+connection.query('SELECT id, title FROM role', (err, res) => {
+    if (err) throw err;
+    const roles = res.map(({ id, title }) => ({ name: title, value: id }));
+
+    inquirer
+      .prompt([
+        {
+          name: 'employee_id',
+          type: 'list',
+          message: "Which employee's role do you want to update?",
+          choices: employees,
+        },
+        {
+          name: 'role_id',
+          type: 'list',
+          message: 'What is the employee new role?',
+          choices: roles,
+        },
+      ])
+      .then((answer) => {
+        connection.query(
+          'UPDATE employee SET ? WHERE ?',
+          [{ role_id: answer.role_id }, { id: answer.employee_id }],
+          (err) => {
+            if (err) throw err;
+            console.log('Employee role updated successfully!');
+            start();
+          }
+        );
+      });
+  });
+} 
+);
+};
+
+// Exporting functions as modules
+module.exports = {
+start,
+viewAllDepartments,
+viewAllRoles,
+viewAllEmployees,
+addDepartment,
+addRole,
+addEmployee,
+updateEmployeeRole,
+};

@@ -1,25 +1,22 @@
--- Create the departments table
 CREATE TABLE departments (
-  id INTEGER PRIMARY KEY,
-  name TEXT
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255)
 );
 
--- Create the roles table
 CREATE TABLE roles (
-  id INTEGER PRIMARY KEY,
-  title TEXT,
-  salary REAL,
-  department_id INTEGER,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  salary DECIMAL(10,2),
+  department_id INT,
   FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
--- Create the employees table
 CREATE TABLE employees (
-  id INTEGER PRIMARY KEY,
-  first_name TEXT,
-  last_name TEXT,
-  role_id INTEGER,
-  manager_id INTEGER,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  role_id INT,
+  manager_id INT,
   FOREIGN KEY (role_id) REFERENCES roles(id),
   FOREIGN KEY (manager_id) REFERENCES employees(id)
 );
