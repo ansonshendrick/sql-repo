@@ -13,7 +13,7 @@ CREATE TABLE roles (
   FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
-CREATE TABLE employees (
+CREATE TABLE employee (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(255),
   last_name VARCHAR(255),

@@ -84,9 +84,9 @@ const viewAllDepartments = () => {
 const viewAllRoles = () => {
   connection.query(
     `
-    SELECT role.id, role.title, department.name AS department, role.salary
+    SELECT roles.id, roles.title, departments.name AS departments, roles.salary
     FROM roles
-    INNER JOIN department ON role.department_id = department.id
+    INNER JOIN departments ON roles.department_id = departments.id
   `,
     (err, res) => {
       if (err) throw err;
@@ -100,19 +100,19 @@ const viewAllRoles = () => {
 const viewAllEmployees = () => {
   connection.query(
     `
-    SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-    FROM employees
-    INNER JOIN role ON employee.role_id = role.id
-    INNER JOIN department ON role.department_id = department.id
+    SELECT employee.id, employee.first_name, employee.last_name, roles.title, departments.name AS department, roles.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+    FROM employee
+    INNER JOIN roles ON employee.role_id = roles.id
+    INNER JOIN departments ON roles.department_id = departments.id
     LEFT JOIN employee manager ON employee.manager_id = manager.id
-  `,
+    `,
     (err, res) => {
       if (err) throw err;
       console.table(res);
       start();
     }
   );
-};
+}  
 
 // Function to add a department
 const addDepartment = () => {
@@ -170,12 +170,8 @@ const addRole = () => {
         ])
         .then((answer) => {
           connection.query(
-            'INSERT INTO roles (title, salary, department_id ) VALUES (?) (?) (?)',
-            {
-              title: answer.title,
-              salary: answer.salary,
-              department_id: answer.department_id,
-            },
+            'INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
+            [answer.title, answer.salary, answer.department_id],
             (err) => {
               if (err) throw err;
               console.log('New role added successfully!');
@@ -199,8 +195,8 @@ const addEmployee = () => {
         `,
         (err, res) => {
           if (err) throw err;
-          const employees = res.map(({ id, name }) => ({ name: name, value: id }));
-          employees.push({ name: 'None', value: null });
+          const employee = res.map(({ id, name }) => ({ name: name, value: id }));
+          employee.push({ name: 'None', value: null });
       
           inquirer
             .prompt([
@@ -224,18 +220,13 @@ const addEmployee = () => {
                 name: 'manager_id',
                 type: 'list',
                 message: "Who is the employee's manager?",
-                choices: employees,
+                choices: employee,
               },
             ])
             .then((answer) => {
               connection.query(
-                'INSERT INTO employee SET ?',
-                {
-                  first_name: answer.first_name,
-                  last_name: answer.last_name,
-                  role_id: answer.role_id,
-                  manager_id: answer.manager_id,
-                },
+                'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
+                [answer.first_name, answer.last_name, answer.role_id, answer.manager_id],
                 (err) => {
                   if (err) throw err;
                   console.log('New employee added successfully!');
@@ -250,47 +241,51 @@ const addEmployee = () => {
 
 // Function to update an employee's role
 const updateEmployeeRole = () => {
-connection.query(
-SELECT , employee.id, CONCAT(employee.first_name, ' ', employee.last_name) , AS , name, role.title ,
-FROM , employee , INNER , JOIN , role , 
-ON , employee.role_id = role.id , ORDER , BY , employee.id , ASC ,
-(err, res) => {
-if (err) throw err;
-const employees = res.map(({ id, name }) => ({ name: name, value: id }));   
-connection.query('SELECT id, title FROM role', (err, res) => {
-    if (err) throw err;
-    const roles = res.map(({ id, title }) => ({ name: title, value: id }));
+  connection.query(
+    `
+    SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS name, roles.title
+    FROM employee
+    INNER JOIN roles ON employee.role_id = roles.id
+    ORDER BY employee.id ASC
+    `,
+    (err, res) => {
+      if (err) throw err;
+      const employees = res.map(({ id, name }) => ({ name: name, value: id }));
+      connection.query('SELECT id, title FROM roles', (err, res) => {
+        if (err) throw err;
+        const roles = res.map(({ id, title }) => ({ name: title, value: id }));
 
-    inquirer
-      .prompt([
-        {
-          name: 'employee_id',
-          type: 'list',
-          message: "Which employee's role do you want to update?",
-          choices: employees,
-        },
-        {
-          name: 'role_id',
-          type: 'list',
-          message: 'What is the employee new role?',
-          choices: roles,
-        },
-      ])
-      .then((answer) => {
-        connection.query(
-          'UPDATE employee SET ? WHERE ?',
-          [{ role_id: answer.role_id }, { id: answer.employee_id }],
-          (err) => {
-            if (err) throw err;
-            console.log('Employee role updated successfully!');
-            start();
-          }
-        );
+        inquirer
+          .prompt([
+            {
+              name: 'employee_id',
+              type: 'list',
+              message: "Which employee's role do you want to update?",
+              choices: employees,
+            },
+            {
+              name: 'role_id',
+              type: 'list',
+              message: 'What is the employee new role?',
+              choices: roles,
+            },
+          ])
+          .then((answer) => {
+            connection.query(
+              'UPDATE employee SET ? WHERE ?',
+              [{ role_id: answer.role_id }, { id: answer.employee_id }],
+              (err) => {
+                if (err) throw err;
+                console.log('Employee role updated successfully!');
+                start();
+              }
+            );
+          });
       });
-  });
-} 
-);
+    }
+  );
 };
+
 
 // Exporting functions as modules
 module.exports = {
