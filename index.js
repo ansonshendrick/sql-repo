@@ -8,7 +8,7 @@ const connection = mysql.createConnection({
   port: 3306,
   user: 'root',
   password: 'Strikers123',
-  // database: 'departments',
+  database: 'Jiffylube',
 });
 
 // Establish database connection
@@ -73,7 +73,7 @@ const start = () => {
 
 // Function to view all departments
 const viewAllDepartments = () => {
-  connection.query('SELECT id, name FROM department', (err, res) => {
+  connection.query('SELECT id, name FROM departments', (err, res) => {
     if (err) throw err;
     console.table(res);
     start();
@@ -85,7 +85,7 @@ const viewAllRoles = () => {
   connection.query(
     `
     SELECT role.id, role.title, department.name AS department, role.salary
-    FROM role
+    FROM roles
     INNER JOIN department ON role.department_id = department.id
   `,
     (err, res) => {
@@ -101,7 +101,7 @@ const viewAllEmployees = () => {
   connection.query(
     `
     SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-    FROM employee
+    FROM employees
     INNER JOIN role ON employee.role_id = role.id
     INNER JOIN department ON role.department_id = department.id
     LEFT JOIN employee manager ON employee.manager_id = manager.id
@@ -123,9 +123,10 @@ const addDepartment = () => {
       message: 'What is the name of the new department?',
     })
     .then((answer) => {
+      const name = answer.name
       connection.query(
-        'INSERT INTO department SET ?',
-        { name: answer.name },
+        'INSERT INTO departments (name) VALUES (?)',
+        [name],
         (err) => {
           if (err) throw err;
           console.log('New department added successfully!');
@@ -137,7 +138,7 @@ const addDepartment = () => {
 
 // Function to add a role
 const addRole = () => {
-    connection.query('SELECT id, name FROM department', (err, res) => {
+    connection.query('SELECT id, name FROM departments', (err, res) => {
       if (err) throw err;
       const departments = res.map(({ id, name }) => ({
         name: name,
@@ -169,7 +170,7 @@ const addRole = () => {
         ])
         .then((answer) => {
           connection.query(
-            'INSERT INTO role SET ?',
+            'INSERT INTO roles (title, salary, department_id ) VALUES (?) (?) (?)',
             {
               title: answer.title,
               salary: answer.salary,
@@ -186,7 +187,7 @@ const addRole = () => {
   };
   // Function to add an employee
 const addEmployee = () => {
-    connection.query('SELECT id, title FROM role', (err, res) => {
+    connection.query('SELECT id, title FROM roles', (err, res) => {
     if (err) throw err;
     const roles = res.map(({ id, title }) => ({ name: title, value: id }));
      connection.query(
